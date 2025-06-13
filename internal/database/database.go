@@ -4,13 +4,15 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"log"
+	"log/slog"
 	"os"
+	"practic/internal/logger/sl"
+	"practic/internal/models"
 	"strconv"
 	"time"
 
 	_ "github.com/joho/godotenv/autoload"
-	_ "github.com/mattn/go-sqlite3"
+	_ "modernc.org/sqlite"
 )
 
 // Service represents a service that interacts with a database.
@@ -22,10 +24,17 @@ type Service interface {
 	// Close terminates the database connection.
 	// It returns an error if the connection cannot be closed.
 	Close() error
+	CreateUser(name, login string, password []byte) (uid int64, err error)
+	User(login string) (models.UserDB, error)
+	//CreateListing()
+	//UpdateListing()
+	//DeleteListing()
+	//GetListings()
 }
 
 type service struct {
-	db *sql.DB
+	log *slog.Logger
+	db  *sql.DB
 }
 
 var (
@@ -33,21 +42,22 @@ var (
 	dbInstance *service
 )
 
-func New() Service {
+func New(log *slog.Logger) Service {
 	// Reuse Connection
 	if dbInstance != nil {
 		return dbInstance
 	}
 
-	db, err := sql.Open("sqlite3", dburl)
+	db, err := sql.Open("sqlite", dburl)
 	if err != nil {
 		// This will not be a connection error, but a DSN parse error or
 		// another initialization error.
-		log.Fatal(err)
+		log.Error("error connection", sl.Err(err))
 	}
 
 	dbInstance = &service{
-		db: db,
+		log: log,
+		db:  db,
 	}
 	return dbInstance
 }
@@ -65,7 +75,7 @@ func (s *service) Health() map[string]string {
 	if err != nil {
 		stats["status"] = "down"
 		stats["error"] = fmt.Sprintf("db down: %v", err)
-		log.Fatalf("db down: %v", err) // Log the error and terminate the program
+		s.log.Error("db down: %v", sl.Err(err)) // Log the error and terminate the program
 		return stats
 	}
 
@@ -108,6 +118,61 @@ func (s *service) Health() map[string]string {
 // If the connection is successfully closed, it returns nil.
 // If an error occurs while closing the connection, it returns the error.
 func (s *service) Close() error {
-	log.Printf("Disconnected from database: %s", dburl)
+	s.log.Info("Disconnected from database: %s", dburl)
 	return s.db.Close()
 }
+
+func (s *service) CreateUser(name, login string, password []byte) (uid int64, err error) {
+	const op = "sqlite.database.CreateUser"
+	const query = `
+		INSERT INTO users (username, password, name) VALUES (?, ?, ?) RETURNING id;
+	`
+
+	stmt, err := s.db.Prepare(query)
+	if err != nil {
+		return 0, fmt.Errorf("%s: %w", op, err)
+	}
+
+	resp, err := stmt.Exec(login, password, name)
+	if err != nil {
+		return 0, fmt.Errorf("%s: %w", op, err)
+	}
+	id, err := resp.LastInsertId()
+	if err != nil {
+		return 0, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return id, nil
+}
+
+func (s *service) User(login string) (models.UserDB, error) {
+	const op = "sqlite.database.User"
+	const query = `
+		SELECT id, username, password, name
+		FROM users
+		WHERE username = ?
+	`
+
+	stmt, err := s.db.Prepare(query)
+	if err != nil {
+		return models.UserDB{}, fmt.Errorf("%s: %w", op, err)
+	}
+
+	var user models.UserDB
+
+	err = stmt.QueryRow(login).Scan(&user.ID, &user.Login, &user.Password, &user.Name)
+	if err != nil {
+		return models.UserDB{}, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return user, nil
+
+}
+
+//func (s *service) CreateListing(name, type_l, description, status, city string, price float64, user_id int64) (uid int64, err error) {
+//	const op = "sqlite.database.CreateListing"
+//	const query = `
+//		INSERT INTO listings (name, type, description, status, price, city, user_id) VALUES ($1, $2, $3);
+//	`
+//	err = s.db.
+//}

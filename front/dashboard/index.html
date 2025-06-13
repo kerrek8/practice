@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Кабинет агента</title>
+    <link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+<h1>Добро пожаловать</h1>
+<button onclick="logout()">Выйти</button>
+
+<h2>Добавить объявление</h2>
+<form id="add-form">
+    <input type="text" id="title" placeholder="Название" required>
+    <input type="number" id="price" placeholder="Цена" required>
+    <input type="text" id="city" placeholder="Город" required>
+    <button type="submit">Добавить</button>
+</form>
+
+<h2>Фильтр</h2>
+<input id="filter" placeholder="Фильтр по городу" oninput="updateListings()">
+
+<h2>Объявления</h2>
+<table>
+    <thead><tr><th>Название</th><th>Цена</th><th>Город</th><th>Действия</th></tr></thead>
+    <tbody id="listings"></tbody>
+</table>
+<div>
+    <button onclick="prevPage()">←</button>
+    <span id="page-info">1</span>
+    <button onclick="nextPage()">→</button>
+</div>
+
+<h2>Аналитика</h2>
+<div id="analytics"></div>
+
+<script src="../app.js"></script>
+</body>
+</html>

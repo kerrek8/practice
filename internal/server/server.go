@@ -2,6 +2,7 @@ package server
 
 import (
 	"fmt"
+	"log/slog"
 	"net/http"
 	"os"
 	"strconv"
@@ -13,17 +14,18 @@ import (
 )
 
 type Server struct {
+	log  *slog.Logger
 	port int
 
 	db database.Service
 }
 
-func NewServer() *http.Server {
+func NewServer(log *slog.Logger) *http.Server {
 	port, _ := strconv.Atoi(os.Getenv("PORT"))
 	NewServer := &Server{
 		port: port,
-
-		db: database.New(),
+		log:  log,
+		db:   database.New(log),
 	}
 
 	// Declare Server config
