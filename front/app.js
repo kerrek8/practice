@@ -124,14 +124,18 @@ function openModal(listing = null) {
 }
 
 async function updateAnalytics() {
-    const res = await fetch('/api/analytics', {
-        // headers: {'Authorization': `Bearer ${getToken()}`}
-    });
+    const res = await fetch('/api/analytics', {});
     const data = await res.json();
-    document.getElementById('analytics').innerHTML = `
-    Объявлений: ${data.total}<br>
-    Средняя цена: ${data.avg_price} ₽<br>
-    Топ-город: ${data.top_city}
+
+    const topCitiesText = data.top_cities
+        .map(c => `${c.city} (${c.count})`)
+        .join(", ");
+
+    const container = document.getElementById("analytics");
+    container.innerHTML = `
+    <strong>Объявлений:</strong> ${data.total_listings} &nbsp;|&nbsp;
+    <strong>Средняя цена:</strong> ${data.avg_price.toLocaleString()} ₽ &nbsp;|&nbsp;
+    <strong>Топ города:</strong> ${topCitiesText}
   `;
 }
 

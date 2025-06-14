@@ -35,8 +35,9 @@ func (s *Server) RegisterRoutes() http.Handler {
 		r.Post("/api/listings", s.CreateListing)
 		r.Put("/api/listings/{id}", s.UpdateListing)
 		r.Delete("/api/listings/{id}", s.DeleteListing)
-		//
-		//r.Get("/api/analytics", AnalyticsHandler)
+
+		r.Get("/api/analytics", s.AnalyticsHandler)
+
 	})
 
 	return r

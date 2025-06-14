@@ -130,3 +130,23 @@ func (s *Server) DeleteListing(w http.ResponseWriter, r *http.Request) {
 	s.log.Info("Listing deleted successfully", slog.Int64("id", listingID))
 	w.WriteHeader(http.StatusNoContent)
 }
+
+func (s *Server) AnalyticsHandler(w http.ResponseWriter, r *http.Request) {
+	userID := r.Context().Value("user").(*jwt.MapClaims)
+	userIDparsed := *userID
+	userIDint := int64(userIDparsed["uid"].(float64))
+
+	analytics, err := s.db.GetAnalytics(userIDint)
+	if err != nil {
+		s.log.Error("Error in getting analytics", sl.Err(err))
+		http.Error(w, "Ошибка получения аналитики", 500)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(analytics); err != nil {
+		s.log.Error("Error in encoding analytics", sl.Err(err))
+		http.Error(w, "Ошибка кодирования аналитики", 500)
+		return
+	}
+}

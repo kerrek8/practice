@@ -94,3 +94,10 @@ select {
     background-color: #dc2626; /* красный */
     color: white;
 }
+
+#analytics {
+    font-size: 16px;
+    padding: 10px 0;
+    border-top: 1px solid #e5e5e5;
+    margin-top: 10px;
+}

@@ -30,9 +30,8 @@ type Service interface {
 	GetListings(userID int64, offset int64, filter string) ([]models.ListingDB, error)
 	GetCities(userID int64) ([]string, error)
 	UpdateListing(name, typel, description, status, city string, price int64, id int64) error
-	//UpdateListing()
 	DeleteListing(id int64) error
-	//GetListings()
+	GetAnalytics(userID int64) (map[string]any, error)
 }
 
 type service struct {
@@ -308,4 +307,61 @@ func (s *service) DeleteListing(id int64) error {
 		return fmt.Errorf("%s: %w", op, err)
 	}
 	return nil
+}
+
+func (s *service) GetAnalytics(userID int64) (map[string]any, error) {
+	const op = "sqlite.database.AnalyticsHandler"
+	const query = `
+		SELECT COUNT(*), AVG(price)
+		FROM listings where user_id = ?;
+	`
+
+	stmt, err := s.db.Prepare(query)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	var count int64
+	var avgPrice float64
+	err = stmt.QueryRow(userID).Scan(&count, &avgPrice)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	const query2 = `
+		SELECT city, COUNT(*) as count
+		FROM listings
+		WHERE user_id = ?
+		GROUP BY city
+		ORDER BY count DESC
+		LIMIT 3
+	`
+	stmt, err = s.db.Prepare(query2)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	type CityStat struct {
+		City  string `json:"city"`
+		Count int    `json:"count"`
+	}
+	rows, err := stmt.Query(userID)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+	defer rows.Close()
+
+	var topCities []CityStat
+	for rows.Next() {
+		var cs CityStat
+		if err := rows.Scan(&cs.City, &cs.Count); err == nil {
+			topCities = append(topCities, cs)
+		}
+	}
+
+	return map[string]any{
+		"total_listings": count,
+		"avg_price":      avgPrice,
+		"top_cities":     topCities,
+	}, nil
 }

@@ -14,7 +14,7 @@ var jwtKey = os.Getenv("JWT_KEY")
 func (s *Server) AuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-		notAuth := []string{"/register", "/", "/api/register", "/api/login", "/styles.css", "/app.js", "/register/", "/api/logout"}
+		notAuth := []string{"/register", "/", "/api/register", "/api/login", "/styles.css", "/app.js", "/register/", "/api/logout", "/health"}
 		requestPath := r.URL.Path
 
 		for _, value := range notAuth {
