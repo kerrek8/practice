@@ -13,11 +13,11 @@ var jwtKey = os.Getenv("JWT_KEY")
 
 func (s *Server) AuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		notAuth := []string{"/register/", "/", "/api/register", "/api/login", "/styles.css", "/app.js"}
+
+		notAuth := []string{"/register", "/", "/api/register", "/api/login", "/styles.css", "/app.js", "/register/", "/api/logout"}
 		requestPath := r.URL.Path
 
 		for _, value := range notAuth {
-
 			if value == requestPath {
 				next.ServeHTTP(w, r)
 				return
@@ -32,7 +32,7 @@ func (s *Server) AuthMiddleware(next http.Handler) http.Handler {
 
 		tokenStr := cookie.Value
 		claims := &jwt.MapClaims{}
-		token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
+		token, err := jwt.ParseWithClaims(tokenStr, claims, func(token *jwt.Token) (interface{}, error) {
 			return []byte(jwtKey), nil
 		})
 		if err != nil || !token.Valid {
@@ -40,6 +40,7 @@ func (s *Server) AuthMiddleware(next http.Handler) http.Handler {
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}
+
 		ctx := context.WithValue(r.Context(), "user", claims)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})

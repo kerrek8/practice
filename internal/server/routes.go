@@ -2,12 +2,10 @@ package server
 
 import (
 	"encoding/json"
-	"net/http"
-	"practic/internal/logger/sl"
-
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
+	"net/http"
 )
 
 func (s *Server) RegisterRoutes() http.Handler {
@@ -29,31 +27,19 @@ func (s *Server) RegisterRoutes() http.Handler {
 
 	r.Post("/api/register", s.RegisterHandler)
 	r.Post("/api/login", s.LoginHandler)
-	r.Post("/api/logout", LogoutHandler)
-	//
-	//r.Group(func(r chi.Router) {
-	//
-	//	r.Get("/api/listings", GetListings)
-	//	r.Post("/api/listings", CreateListing)
-	//	r.Put("/api/listings/{id}", UpdateListing)
-	//	r.Delete("/api/listings/{id}", DeleteListing)
-	//
-	//	r.Get("/api/analytics", AnalyticsHandler)
-	//})
+	r.Post("/api/logout", s.LogoutHandler)
+	r.Get("/api/me", s.MeHandler)
+	r.Group(func(r chi.Router) {
+		r.Get("/api/cities", s.GetCities)
+		r.Get("/api/listings", s.GetListings)
+		r.Post("/api/listings", s.CreateListing)
+		r.Put("/api/listings/{id}", s.UpdateListing)
+		r.Delete("/api/listings/{id}", s.DeleteListing)
+		//
+		//r.Get("/api/analytics", AnalyticsHandler)
+	})
 
 	return r
-}
-
-func (s *Server) HelloWorldHandler(w http.ResponseWriter, r *http.Request) {
-	resp := make(map[string]string)
-	resp["message"] = "Hello World"
-
-	jsonResp, err := json.Marshal(resp)
-	if err != nil {
-		s.log.Error("error handling JSON marshal. Err: ", sl.Err(err))
-	}
-
-	_, _ = w.Write(jsonResp)
 }
 
 func (s *Server) healthHandler(w http.ResponseWriter, r *http.Request) {

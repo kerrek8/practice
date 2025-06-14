@@ -26,9 +26,12 @@ type Service interface {
 	Close() error
 	CreateUser(name, login string, password []byte) (uid int64, err error)
 	User(login string) (models.UserDB, error)
-	//CreateListing()
+	CreateListing(name, type_l, description, status, city string, price int64, user_id int64) (uid int64, err error)
+	GetListings(userID int64, offset int64, filter string) ([]models.ListingDB, error)
+	GetCities(userID int64) ([]string, error)
+	UpdateListing(name, typel, description, status, city string, price int64, id int64) error
 	//UpdateListing()
-	//DeleteListing()
+	DeleteListing(id int64) error
 	//GetListings()
 }
 
@@ -169,10 +172,140 @@ func (s *service) User(login string) (models.UserDB, error) {
 
 }
 
-//func (s *service) CreateListing(name, type_l, description, status, city string, price float64, user_id int64) (uid int64, err error) {
-//	const op = "sqlite.database.CreateListing"
-//	const query = `
-//		INSERT INTO listings (name, type, description, status, price, city, user_id) VALUES ($1, $2, $3);
-//	`
-//	err = s.db.
-//}
+func (s *service) CreateListing(name, type_l, description, status, city string, price int64, user_id int64) (uid int64, err error) {
+	const op = "sqlite.database.CreateListing"
+	const query = `
+		INSERT INTO listings (name, type, description, status, price, city, user_id) VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING id;
+	`
+	stmt, err := s.db.Prepare(query)
+	if err != nil {
+		return 0, fmt.Errorf("%s: %w", op, err)
+	}
+	resp, err := stmt.Exec(name, type_l, description, status, price, city, user_id)
+	if err != nil {
+		return 0, fmt.Errorf("%s: %w", op, err)
+	}
+	id, err := resp.LastInsertId()
+	if err != nil {
+		return 0, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return id, nil
+}
+
+func (s *service) GetListings(userID int64, offset int64, filter string) ([]models.ListingDB, error) {
+	const op = "sqlite.database.GetListings"
+	const queryWithFilter = `
+		SELECT id, name, type, description, status, price, city, user_id, date_created
+		FROM listings where user_id = ? and city = ? limit 10 offset ?
+	`
+	const queryWithoutFilter = `
+		SELECT id, name, type, description, status, price, city, user_id, date_created
+		from listings where user_id = ? limit 10 offset ?
+	`
+	var rows *sql.Rows // Prepare the query based on whether a filter is provided
+	if filter != "" {
+		//filter = "%" + filter + "%"
+		stmt, err := s.db.Prepare(queryWithFilter)
+		if err != nil {
+			return nil, fmt.Errorf("%s: %w", op, err)
+		}
+		rows, err = stmt.Query(userID, filter, offset)
+		if err != nil {
+			return nil, fmt.Errorf("%s: %w", op, err)
+		}
+		defer rows.Close()
+	} else {
+		stmt, err := s.db.Prepare(queryWithoutFilter)
+		if err != nil {
+			return nil, fmt.Errorf("%s: %w", op, err)
+		}
+		rows, err = stmt.Query(userID, offset)
+		if err != nil {
+			return nil, fmt.Errorf("%s: %w", op, err)
+		}
+		defer rows.Close()
+	}
+
+	var listings []models.ListingDB
+	for rows.Next() {
+		var l models.ListingDB
+		if err := rows.Scan(&l.ID, &l.Name, &l.Typel, &l.Description, &l.Status, &l.Price, &l.City, &l.UserID, &l.Date_created); err != nil {
+			return nil, fmt.Errorf("%s: %w", op, err)
+		}
+
+		listings = append(listings, l)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return listings, nil
+}
+
+func (s *service) GetCities(userID int64) ([]string, error) {
+	const op = "sqlite.database.GetCities"
+	const query = `
+		SELECT DISTINCT city FROM listings WHERE user_id = ? ORDER BY city
+	`
+
+	stmt, err := s.db.Prepare(query)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	rows, err := stmt.Query(userID)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+	defer rows.Close()
+
+	var cities []string
+	for rows.Next() {
+		var city string
+		if err := rows.Scan(&city); err != nil {
+			return nil, fmt.Errorf("%s: %w", op, err)
+		}
+		cities = append(cities, city)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return cities, nil
+
+}
+
+func (s *service) UpdateListing(name, typel, description, status, city string, price int64, id int64) error {
+	const op = "sqlite.database.UpdateListing"
+	const query = `
+		UPDATE listings SET name = ?, type = ?, description = ?, status = ?, price = ?, city = ? WHERE id = ?;
+	`
+	stmt, err := s.db.Prepare(query)
+	if err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+	_, err = stmt.Exec(name, typel, description, status, price, city, id)
+	if err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+	return nil
+}
+
+func (s *service) DeleteListing(id int64) error {
+	const op = "sqlite.database.DeleteListing"
+	const query = `
+		DELETE FROM listings WHERE id = ?;
+	`
+	stmt, err := s.db.Prepare(query)
+	if err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+	_, err = stmt.Exec(id)
+	if err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+	return nil
+}

@@ -1,3 +1,5 @@
+
+
 create table if not exists users (
     id INTEGER primary key,
     username text not null unique,
@@ -14,6 +16,6 @@ create table if not exists listings (
     price numeric not null,
     city text not null,
     user_id integer,
-    date_created datetime not null default current_timestamp,
+    date_created datetime not null default (datetime('now', '+5 hours')),
     foreign key (user_id) references users(id) on delete cascade
 );

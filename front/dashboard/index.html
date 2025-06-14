@@ -6,34 +6,94 @@
     <link rel="stylesheet" href="../styles.css">
 </head>
 <body>
-<h1>Добро пожаловать</h1>
-<button onclick="logout()">Выйти</button>
+<h1>Добро пожаловать <span id="user-name"></span></h1>
+<button class="action-button delete-btn" onclick="logout()">Выйти</button>
 
-<h2>Добавить объявление</h2>
-<form id="add-form">
-    <input type="text" id="title" placeholder="Название" required>
-    <input type="number" id="price" placeholder="Цена" required>
-    <input type="text" id="city" placeholder="Город" required>
-    <button type="submit">Добавить</button>
-</form>
+<!-- Кнопка открытия -->
+<button class="action-button edit-btn" onclick="openModal()">Добавить запись</button>
+
+<!-- Модальное окно -->
+<div id="modal" class="modal hidden">
+    <div class="modal-content">
+        <h2 style="grid-area: a" id="modal-title-label">Новое объявление</h2>
+        <label>
+            Название
+            <input id="modal-title" placeholder="Название" required>
+        </label>
+<!--        <input id="modal-type" placeholder="тип" required>-->
+        <label>
+            Тип
+        <select id="modal-type" required>
+            <option>Квартира</option>
+            <option>Дом</option>
+            <option>Другое</option>
+        </select>
+        </label>
+        <label>
+            Статус
+            <select id="modal-status" required>
+                <option>Продажа</option>
+                <option>Аренда</option>
+                <option>Другое</option>
+            </select>
+        </label>
+        <label>
+            Цена
+        <input id="modal-price" type="number" placeholder="Цена" required>
+        </label>
+        <label>
+            Город
+        <input id="modal-city" placeholder="Город" required>
+        </label>
+        <label style="grid-area: g">
+            Описание
+            <textarea id="modal-description" required></textarea>
+
+        </label>
+        <div style="margin-top: 10px; grid-area: x">
+            <button id="modal-save-button">Создать</button>
+            <button onclick="closeModal()">Отмена</button>
+        </div>
+    </div>
+</div>
+
 
 <h2>Фильтр</h2>
-<input id="filter" placeholder="Фильтр по городу" oninput="updateListings()">
+<!--<input id="filter" placeholder="Фильтр по городу" oninput="updateListings()">-->
+<select id="filter" onchange="updateListings()">
+    <option value="">Все города</option>
+</select>
 
 <h2>Объявления</h2>
 <table>
-    <thead><tr><th>Название</th><th>Цена</th><th>Город</th><th>Действия</th></tr></thead>
+    <thead><tr><th>№</th><th>Название</th><th>Тип</th><th>Описание</th><th>Статус</th><th>Цена</th><th>Город</th><th>Дата создания</th><th>Действия</th></tr></thead>
     <tbody id="listings"></tbody>
 </table>
 <div>
-    <button onclick="prevPage()">←</button>
+    <button id="prev-button" onclick="prevPage()">←</button>
     <span id="page-info">1</span>
-    <button onclick="nextPage()">→</button>
+    <button id="next-button" onclick="nextPage()">→</button>
 </div>
 
 <h2>Аналитика</h2>
 <div id="analytics"></div>
 
 <script src="../app.js"></script>
+<script>
+    window.addEventListener("DOMContentLoaded", async () => {
+        const res = await fetch("/api/me");
+        if (res.status === 401) {
+            window.location.href = "/";
+            return
+        }
+        const data = await res.json();
+        document.getElementById("user-name").textContent = data.login;
+
+
+        await updateListings();
+        await loadCities();
+        await updateAnalytics();
+    });
+</script>
 </body>
 </html>

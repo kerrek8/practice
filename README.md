@@ -6,48 +6,21 @@ One Paragraph of project description goes here
 
 These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. See deployment for notes on how to deploy the project on a live system.
 
-## MakeFile
 
-Run build make command with tests
-```bash
-make all
-```
 
-Build the application
-```bash
-make build
-```
+roadmap 
+переделать защиту от перехода в строке браузера на /dashboard
 
-Run the application
-```bash
-make run
-```
-Create DB container
-```bash
-make docker-run
-```
+в идеале редиректы сделать на бэкенде
 
-Shutdown DB Container
-```bash
-make docker-down
-```
+передделать алёрты (сделать что нибудь получше)
 
-DB Integrations Test:
-```bash
-make itest
-```
+распарсить ошибку повторяющегося юзера
 
-Live reload the application:
-```bash
-make watch
-```
+переделать фильтр по городу (сделать выпадающий список)
 
-Run the test suite:
-```bash
-make test
-```
 
-Clean up binary from the last build:
-```bash
-make clean
-```
+
+можно добавитть проверку на одинаковые объявления (пока не делаю)
+добавить проверку на валидность города
+все проверки на валидность сделать на бэкенде

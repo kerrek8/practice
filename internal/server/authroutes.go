@@ -3,6 +3,7 @@ package server
 import (
 	"encoding/json"
 	"fmt"
+	jwtbib "github.com/golang-jwt/jwt/v5"
 	_ "github.com/joho/godotenv/autoload"
 	"golang.org/x/crypto/bcrypt"
 	"log/slog"
@@ -63,9 +64,10 @@ func (s *Server) LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	cookie := &http.Cookie{
-		Name:  "token",
-		Path:  "/",
-		Value: token}
+		Name:     "token",
+		Path:     "/",
+		HttpOnly: true,
+		Value:    token}
 	http.SetCookie(w, cookie)
 	_, err = w.Write([]byte("Login successful"))
 	if err != nil {
@@ -75,4 +77,20 @@ func (s *Server) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func LogoutHandler(w http.ResponseWriter, r *http.Request) {}
+func (s *Server) LogoutHandler(w http.ResponseWriter, r *http.Request) {
+	http.SetCookie(w, &http.Cookie{
+		Name:     "token",
+		Value:    "",
+		Path:     "/",  // путь должен совпадать с установленной ранее cookie
+		MaxAge:   -1,   // означает: удалить cookie
+		HttpOnly: true, // опционально
+	})
+	http.Redirect(w, r, "/", http.StatusSeeOther)
+}
+
+func (s *Server) MeHandler(w http.ResponseWriter, r *http.Request) {
+	userID := r.Context().Value("user").(*jwtbib.MapClaims)
+	userIDparsed := *userID
+	userLogin := userIDparsed["login"].(string)
+	json.NewEncoder(w).Encode(map[string]string{"login": userLogin})
+}
