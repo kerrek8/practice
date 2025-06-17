@@ -287,7 +287,7 @@ function renderUsers() {
               <button onclick="setRole(${u.id}, '${u.role === 'admin' ? 'agent' : 'admin'}')">
                 Сделать ${u.role === 'admin' ? 'агентом' : 'админом'}
               </button>
-              <button onclick="deleteUser(${u.id})" style="background-color: #dc2626; color: white;">Удалить</button>
+              <button onclick="deleteUser(${u.id})" class="action-button delete-btn">Удалить</button>
             </td>
           </tr>
         `;

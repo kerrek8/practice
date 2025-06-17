@@ -129,12 +129,12 @@ select {
 
 .edit-btn {
     background-color: #2563eb; /* синий */
-    color: #2f2a35;
+    color: white;
 }
 
 .delete-btn {
     background-color: #dc2626; /* красный */
-    color: #2f2a35;
+    color: white;
 }
 
 #analytics {
