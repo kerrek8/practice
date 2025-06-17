@@ -6,14 +6,19 @@
     <link rel="stylesheet" href="../styles.css">
 </head>
 <body>
+<div class="container">
 <h1>Регистрация</h1>
 <form id="register-form">
-    <input type="text" id="name" placeholder="Имя" required><br>
-    <input type="text" id="login" placeholder="Логин" required><br>
-    <input type="password" id="password" placeholder="Пароль" required><br>
+    <input type="text" id="name" placeholder="Имя" required>
+    <input type="text" id="login" placeholder="Логин" required>
+    <input type="password" id="password" placeholder="Пароль" required>
     <button type="submit">Зарегистрироваться</button>
 </form>
 <p>Уже есть аккаунт? <a href="/">Войти</a></p>
+</div>
+
+<div id="toast" class="toast hidden"></div>
+
 
 <script src="../app.js"></script>
 <script>
@@ -30,10 +35,10 @@
         });
 
         if (res.ok) {
-            alert("успешная регистрация");
-            window.location.href = '/';
+            showToast("Успешная регистрация! Переход через 2 секунды", "#22c55e");
+            setTimeout(() => window.location.href = "/", 2000);
         } else {
-            alert('Ошибка регистрации');
+            showToast("Ошибка регистрации, пользователь с таким логином уже существует", "#ef4444");
         }
     });
 </script>

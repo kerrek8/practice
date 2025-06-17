@@ -113,6 +113,9 @@ func (s *Server) UpdateListing(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) DeleteListing(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
+	user := r.Context().Value("user").(*jwt.MapClaims)
+	userID := int64((*user)["uid"].(float64))
+
 	listingID, err := strconv.ParseInt(id, 10, 64)
 	if err != nil {
 		s.log.Error("Error in parsing listing ID", sl.Err(err))
@@ -120,7 +123,7 @@ func (s *Server) DeleteListing(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = s.db.DeleteListing(listingID)
+	err = s.db.DeleteListing(listingID, userID)
 	if err != nil {
 		s.log.Error("Error in deleting listing", sl.Err(err))
 		http.Error(w, "Ошибка удаления", 500)

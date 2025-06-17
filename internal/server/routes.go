@@ -39,6 +39,10 @@ func (s *Server) RegisterRoutes() http.Handler {
 		r.Get("/api/analytics", s.AnalyticsHandler)
 
 	})
+	r.With(s.AdminOnly).Get("/api/admin/users", s.AdminUsersHandler)
+	r.With(s.AdminOnly).Get("/api/admin/listings", s.AdminListingsHandler)
+	r.With(s.AdminOnly).Post("/api/admin/set-role", s.AdminSetRoleHandler)
+	r.With(s.AdminOnly).Post("/api/admin/delete-user", s.AdminDeleteUserHandler)
 
 	return r
 }

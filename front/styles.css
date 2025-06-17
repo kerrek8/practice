@@ -1,13 +1,45 @@
+
+
 body {
     font-family: sans-serif;
-    /*max-width: 800px;*/
+    max-width: 900px;
     margin: auto;
     padding: 20px;
+    background-color: #EAE0C8;
+    color: #536878;
 }
+
+.container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+h2 {
+    margin-bottom: 0;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+}
+
+button {
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #8c8476;
+}
+
+
 input, button {
     padding: 6px;
     margin: 4px 0;
-    color: red;
+    color: #414c56;
+    background-color: #EAE0C8;
+    border: 1px solid #ccc;
+    border-radius: 6px;
 }
 table {
     width: 100%;
@@ -44,7 +76,7 @@ th, td {
         "g g g g g"
         "x x x x x";
     gap: 10px;
-    background: white;
+    background: #EAE0C8;
     padding: 20px;
     border-radius: 6px;
     min-width: 300px;
@@ -66,6 +98,7 @@ textarea {
     resize: none;
     width: 600px;
     height: 200px;
+    background-color: #EAE0C8;;
 }
 
 label {
@@ -76,6 +109,8 @@ label {
 select {
     margin: 4px 0;
     padding: 6px;
+    background-color: #bbb1a3;
+    color: #414c56;
 }
 
 .action-button {
@@ -100,4 +135,30 @@ select {
     padding: 10px 0;
     border-top: 1px solid #e5e5e5;
     margin-top: 10px;
+}
+
+
+.toast {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: white;
+    padding: 12px 20px;
+    border-radius: 6px;
+    font-weight: bold;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    z-index: 9999;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+
+.toast.show {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.toast.hidden {
+    opacity: 0;
 }

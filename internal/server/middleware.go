@@ -45,3 +45,19 @@ func (s *Server) AuthMiddleware(next http.Handler) http.Handler {
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
+
+func (s *Server) AdminOnly(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		userID := r.Context().Value("user").(*jwt.MapClaims)
+		userIDparsed := *userID
+		userrole := userIDparsed["role"].(string)
+
+		//role, err := s.db.AdminOnly(userIDint)
+		if userrole != "admin" {
+			http.Error(w, "Forbidden", http.StatusForbidden)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
+}

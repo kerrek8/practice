@@ -4,16 +4,22 @@
     <meta charset="UTF-8">
     <title>Вход</title>
     <link rel="stylesheet" href="styles.css">
+
 </head>
 <body>
+<div class="container">
 <h1>Вход</h1>
-<form id="login-form">
-    <input type="text" id="login" placeholder="Логин" required><br>
-    <input type="password" id="password" placeholder="Пароль" required><br>
+
+<form id="login-form" method="post" action="/api/login">
+    <input type="text" id="login" placeholder="Логин" name="username" required>
+    <input type="password" id="password" placeholder="Пароль" name="password" required>
     <button type="submit">Войти</button>
 </form>
+
 <p>Нет аккаунта? <a href="/register">Зарегистрироваться</a></p>
 
+</div>
+<div id="toast" class="toast hidden"></div>
 <script src="app.js"></script>
 <script>
     document.getElementById('login-form').addEventListener('submit', async e => {
@@ -28,17 +34,22 @@
         });
 
         if (res.ok) {
-            window.location.href = '/dashboard';
+            const meRes = await fetch("/api/me");
+            if (meRes.ok) {
+                const me = await meRes.json();
+                if (me.role === "admin") {
+                    window.location.href = "/admin";
+                } else {
+                    window.location.href = "/dashboard";
+                }
+            } else {
+                showToast("Не удалось получить данные пользователя", "#f43f5e");
+            }
         } else {
-            alert('Неверные данные');
+            showToast('Неверные данные', "#ef4444");
         }
     });
-    // window.addEventListener("DOMContentLoaded", async () => {
-    //     const res = await fetch("/api/me");
-    //     if (res.ok) {
-    //         window.location.href = "/dashboard";
-    //     }
-    // });
+
 </script>
 </body>
 </html>

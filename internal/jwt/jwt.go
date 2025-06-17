@@ -14,6 +14,7 @@ func NewToken(user models.UserDB, duration time.Duration) (string, error) {
 	claims["uid"] = user.ID
 	claims["login"] = user.Login
 	claims["name"] = user.Name
+	claims["role"] = user.Role
 	claims["exp"] = time.Now().Add(duration).Unix()
 
 	tokenString, err := token.SignedString([]byte(os.Getenv("JWT_KEY")))

@@ -45,6 +45,7 @@ func (s *Server) LoginHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
+
 	user, err := s.db.User(u.Login)
 	if err != nil {
 		s.log.Error("Error in getting user", sl.Err(err))
@@ -73,8 +74,9 @@ func (s *Server) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		return
 	}
-	s.log.Info("User logged in", slog.Int64("id", user.ID))
+	s.log.Info("User logged in", slog.Int64("id", user.ID), slog.String("role", user.Role))
 	w.WriteHeader(http.StatusOK)
+
 }
 
 func (s *Server) LogoutHandler(w http.ResponseWriter, r *http.Request) {
@@ -92,5 +94,5 @@ func (s *Server) MeHandler(w http.ResponseWriter, r *http.Request) {
 	userID := r.Context().Value("user").(*jwtbib.MapClaims)
 	userIDparsed := *userID
 	userLogin := userIDparsed["login"].(string)
-	json.NewEncoder(w).Encode(map[string]string{"login": userLogin})
+	json.NewEncoder(w).Encode(map[string]string{"login": userLogin, "role": userIDparsed["role"].(string)})
 }

@@ -75,11 +75,13 @@ async function updateListings() {
 }
 
 async function deleteListing(id) {
+    if (!confirm("Вы уверены, что хотите удалить объявление?")) return;
     await fetch(`/api/listings/${id}`, {
         method: 'DELETE',
     });
     await updateListings();
     await updateAnalytics();
+    showToast("Объявление удалено", "#f87171");
 }
 
 function openModal(listing = null) {
@@ -184,7 +186,7 @@ async function createListing() {
         body: JSON.stringify({ title, type, description, status, price, city })
     }).then(res => {
         if (res.ok){
-            alert("успешно добавленно")
+            showToast("успешно добавленно", "#22c55e")
         }
         }
     );
@@ -227,7 +229,7 @@ async function updateListing(id) {
         body: JSON.stringify({ title, type, description, status, price, city })
     }).then(res => {
             if (res.ok){
-                alert("успешно Изменено")
+                showToast("успешно Изменено", "#22c55e")
             }
         }
     );
@@ -235,4 +237,140 @@ async function updateListing(id) {
     closeModal();
     updateListings();
     updateAnalytics();
+}
+
+function showToast(text, background = "#2dd4bf", duration = 2000) {
+    const toast = document.getElementById('toast');
+    toast.textContent = text;
+    toast.style.backgroundColor = background;
+
+    toast.classList.remove('hidden');
+    toast.classList.add('show');
+
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.classList.add('hidden'), 300);
+    }, duration);
+}
+
+
+
+let allUsers = [];
+let allListings = [];
+
+async function fetchAdminData() {
+    const users = await fetch('/api/admin/users').then(res => res.json());
+    const listings = await fetch('/api/admin/listings').then(res => res.json());
+
+    allUsers = users;
+    allListings = listings;
+
+    renderUsers();
+    renderUserFilter();
+    renderListings();
+}
+
+function renderUsers() {
+    const usersEl = document.getElementById("users");
+    usersEl.innerHTML = "";
+    allUsers.forEach(u => {
+        usersEl.innerHTML += `
+          <tr>
+            <td>${u.id}</td>
+            <td>${u.name}</td>
+            <td>${u.login}</td>
+            <td>${u.total}</td>
+            <td>${u.role}</td>
+            <td>
+              <button onclick="setRole(${u.id}, '${u.role === 'admin' ? 'agent' : 'admin'}')">
+                Сделать ${u.role === 'admin' ? 'агентом' : 'админом'}
+              </button>
+              <button onclick="deleteUser(${u.id})" style="background-color: #dc2626; color: white;">Удалить</button>
+            </td>
+          </tr>
+        `;
+    });
+}
+
+async function setRole(userId, role) {
+    await fetch('/api/admin/set-role', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: userId, role })
+    });
+    showToast("Роль обновлена");
+    fetchAdminData();
+}
+
+async function deleteUser(userId) {
+    if (!confirm("Удалить пользователя?")) return;
+    await fetch('/api/admin/delete-user', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: userId })
+    });
+    showToast("Пользователь удалён", "#f87171");
+    fetchAdminData();
+}
+
+function filterUsers() {
+    const term = document.getElementById("user-search").value.toLowerCase();
+    const rows = document.querySelectorAll("#users tr");
+    rows.forEach(row => {
+        const cells = row.querySelectorAll("td");
+        if (cells.length === 0) return;
+        const name = cells[1].textContent.toLowerCase();
+        const username = cells[2].textContent.toLowerCase();
+
+        const matches = name.includes(term) || username.includes(term);
+        row.style.display = matches ? "" : "none";
+    });
+}
+
+function renderUserFilter() {
+    const select = document.getElementById("user-filter");
+    select.innerHTML = '<option value="">Все агенты</option>';
+    allUsers.forEach(u => {
+        const option = document.createElement("option");
+        option.value = u.name;
+        option.textContent = u.name;
+        select.appendChild(option);
+    });
+}
+
+function renderListings() {
+    const selected = document.getElementById("user-filter").value;
+
+    const listingsEl = document.getElementById("listings");
+    listingsEl.innerHTML = "";
+
+    allListings
+        .filter(l => !selected || l.Agent === selected)
+        .forEach(l => {
+            listingsEl.innerHTML += `
+            <tr>
+              <td>${l.ID}</td>
+              <td>${l.Name}</td>
+              <td>${l.Typel}</td>
+              <td>${l.Description}</td>
+              <td>${l.Status}</td>
+              <td>${l.Price}</td>
+                <td>${l.City}</td>
+                <td>${new Date(l.Date_created).toLocaleDateString()}</td>
+                <td>${l.Agent}</td>
+                <td>
+                  <button onclick="deleteAdminListing(${l.ID})" style="background-color: #dc2626; color: white;">Удалить</button>
+                </td>
+            </tr>
+          `;
+        });
+}
+
+async function deleteAdminListing(id) {
+    if (!confirm("Вы уверены, что хотите удалить объявление?")) return;
+    await fetch(`/api/listings/${id}`, {
+        method: 'DELETE',
+    });
+    showToast("Объявление удалено", "#f87171");
+    fetchAdminData();
 }

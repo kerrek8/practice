@@ -30,8 +30,12 @@ type Service interface {
 	GetListings(userID int64, offset int64, filter string) ([]models.ListingDB, error)
 	GetCities(userID int64) ([]string, error)
 	UpdateListing(name, typel, description, status, city string, price int64, id int64) error
-	DeleteListing(id int64) error
+	DeleteListing(id int64, userID int64) error
 	GetAnalytics(userID int64) (map[string]any, error)
+	GetAllUsers() (users []models.UserAdmin, err error)
+	GetAllListings() (listings []models.ListingDB, err error)
+	SetUserRole(userID int64, role string) error
+	DeleteUser(userID int64) error
 }
 
 type service struct {
@@ -150,7 +154,7 @@ func (s *service) CreateUser(name, login string, password []byte) (uid int64, er
 func (s *service) User(login string) (models.UserDB, error) {
 	const op = "sqlite.database.User"
 	const query = `
-		SELECT id, username, password, name
+		SELECT id, username, password, name, role
 		FROM users
 		WHERE username = ?
 	`
@@ -162,7 +166,7 @@ func (s *service) User(login string) (models.UserDB, error) {
 
 	var user models.UserDB
 
-	err = stmt.QueryRow(login).Scan(&user.ID, &user.Login, &user.Password, &user.Name)
+	err = stmt.QueryRow(login).Scan(&user.ID, &user.Login, &user.Password, &user.Name, &user.Role)
 	if err != nil {
 		return models.UserDB{}, fmt.Errorf("%s: %w", op, err)
 	}
@@ -293,16 +297,17 @@ func (s *service) UpdateListing(name, typel, description, status, city string, p
 	return nil
 }
 
-func (s *service) DeleteListing(id int64) error {
+func (s *service) DeleteListing(id int64, userID int64) error {
 	const op = "sqlite.database.DeleteListing"
 	const query = `
-		DELETE FROM listings WHERE id = ?;
-	`
+	DELETE FROM listings WHERE id = ? AND (user_id = ? OR ? = (SELECT id FROM users Where role = 'admin'));
+`
+
 	stmt, err := s.db.Prepare(query)
 	if err != nil {
 		return fmt.Errorf("%s: %w", op, err)
 	}
-	_, err = stmt.Exec(id)
+	_, err = stmt.Exec(id, userID, userID, userID)
 	if err != nil {
 		return fmt.Errorf("%s: %w", op, err)
 	}
@@ -364,4 +369,99 @@ func (s *service) GetAnalytics(userID int64) (map[string]any, error) {
 		"avg_price":      avgPrice,
 		"top_cities":     topCities,
 	}, nil
+}
+
+func (s *service) GetAllUsers() (users []models.UserAdmin, err error) {
+	const op = "sqlite.database.GetAllUsers"
+	const query = `
+		SELECT users.id, users.username, users.name, users.role, COUNT(listings.id) AS total FROM users LEFT JOIN listings ON users.id = listings.user_id GROUP BY users.id
+		ORDER BY total DESC;
+	`
+	stmt, err := s.db.Prepare(query)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	rows, err := stmt.Query()
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var u models.UserAdmin
+		if err := rows.Scan(&u.ID, &u.Login, &u.Name, &u.Role, &u.Total); err != nil {
+			return nil, fmt.Errorf("%s: %w", op, err)
+		}
+		users = append(users, u)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return users, nil
+}
+
+func (s *service) GetAllListings() (listings []models.ListingDB, err error) {
+	const op = "sqlite.database.GetAllListings"
+	const query = `
+		SELECT listings.id, listings.name, listings.type, listings.description, listings.status, listings.price, listings.city, users.name, listings.date_created FROM listings JOIN users ON listings.user_id = users.id ORDER BY listings.date_created DESC;
+	`
+	stmt, err := s.db.Prepare(query)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	rows, err := stmt.Query()
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var l models.ListingDB
+		if err := rows.Scan(&l.ID, &l.Name, &l.Typel, &l.Description, &l.Status, &l.Price, &l.City, &l.Agent, &l.Date_created); err != nil {
+			return nil, fmt.Errorf("%s: %w", op, err)
+		}
+		listings = append(listings, l)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return listings, nil
+}
+
+func (s *service) SetUserRole(userID int64, role string) error {
+	const op = "sqlite.database.SetUserRole"
+	const query = `
+		UPDATE users SET role = ? WHERE id = ?;
+	`
+	stmt, err := s.db.Prepare(query)
+	if err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+	_, err = stmt.Exec(role, userID)
+	if err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+	return nil
+}
+
+func (s *service) DeleteUser(userID int64) error {
+	const op = "sqlite.database.DeleteUser"
+	const query = `
+		DELETE FROM users WHERE id = ?;
+	`
+	stmt, err := s.db.Prepare(query)
+	if err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+	_, err = stmt.Exec(userID)
+	if err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+	return nil
 }

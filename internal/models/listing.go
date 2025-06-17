@@ -14,6 +14,7 @@ type ListingDB struct {
 	City         string
 	UserID       int64
 	Date_created time.Time
+	Agent        string
 }
 
 type Listing struct {
