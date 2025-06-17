@@ -33,6 +33,29 @@ func (s *Server) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		s.log.Error("Error in creating user", sl.Err(err))
 		http.Error(w, fmt.Sprintf("failed to create user: %v", err), http.StatusInternalServerError)
 	}
+	user, err := s.db.User(u.Login)
+	if err != nil {
+		s.log.Error("Error in getting user", sl.Err(err))
+		http.Error(w, fmt.Sprintf("failed to get user: %v", err), http.StatusInternalServerError)
+		return
+	}
+	token, err := jwt.NewToken(user, time.Hour)
+	if err != nil {
+		s.log.Error("Error in creating token", sl.Err(err))
+		http.Error(w, fmt.Sprintf("failed to create token: %v", err), http.StatusInternalServerError)
+		return
+	}
+	cookie := &http.Cookie{
+		Name:     "token",
+		Path:     "/",
+		HttpOnly: true,
+		Value:    token}
+	http.SetCookie(w, cookie)
+	_, err = w.Write([]byte("Login successful"))
+	if err != nil {
+		return
+	}
+
 	s.log.Info("User created successfully", slog.Int64("id", uid))
 	w.WriteHeader(http.StatusCreated)
 }
