@@ -58,20 +58,22 @@ async function updateListings() {
       <td>${item.Typel}</td>
       <td>${item.Description}</td>
       <td>${item.Status}</td>
-      <td>${item.Price}</td>
+      <td>${item.Price.toLocaleString("ru-RU", {
+                style: "currency",
+                currency: "RUB"
+            })}</td>
       <td>${item.City}</td>
       <td>${formatDate(item.Date_created)}</td>
       
       <td><button class="action-button edit-btn" onclick=openModal(${JSON.stringify(item)})>Изменить</button> <button class="action-button delete-btn" onclick="deleteListing(${item.ID})">Удалить</button></td>
     `;
-            //onclick=openModal(${JSON.stringify(item)}))
             tbody.appendChild(tr);
         });
     }
     document.getElementById('page-info').textContent = currentPage;
-    // отключим/включим кнопки
     document.getElementById("prev-button").disabled = !hasPrevPage;
     document.getElementById("next-button").disabled = !hasNextPage;
+
 }
 
 async function deleteListing(id) {
@@ -354,12 +356,15 @@ function renderListings() {
               <td>${l.Typel}</td>
               <td>${l.Description}</td>
               <td>${l.Status}</td>
-              <td>${l.Price}</td>
+              <td>${l.Price.toLocaleString("ru-RU", {
+                style: "currency",
+                currency: "RUB"
+            })}</td>
                 <td>${l.City}</td>
                 <td>${new Date(l.Date_created).toLocaleDateString()}</td>
                 <td>${l.Agent}</td>
                 <td>
-                  <button onclick="deleteAdminListing(${l.ID})" style="background-color: #dc2626; color: white;">Удалить</button>
+                  <button onclick="deleteAdminListing(${l.ID})" class="delete-btn action-button" ">Удалить</button>
                 </td>
             </tr>
           `;

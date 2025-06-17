@@ -5,8 +5,8 @@ body {
     max-width: 900px;
     margin: auto;
     padding: 20px;
-    background-color: #EAE0C8;
-    color: #536878;
+    background-color: #F8E8CC;
+    color: #4D303F;
 }
 
 .container {
@@ -36,9 +36,9 @@ button:hover {
 input, button {
     padding: 6px;
     margin: 4px 0;
-    color: #414c56;
-    background-color: #EAE0C8;
-    border: 1px solid #ccc;
+    color: #2f2a35;
+    background-color: #F8E8CC;
+    border: 1px solid #914E56;
     border-radius: 6px;
 }
 table {
@@ -47,7 +47,7 @@ table {
     margin-top: 10px;
 }
 th, td {
-    border: 1px solid #ccc;
+    border: 1px solid #914E56;
     padding: 6px;
     text-align: left;
 }
@@ -76,7 +76,7 @@ th, td {
         "g g g g g"
         "x x x x x";
     gap: 10px;
-    background: #EAE0C8;
+    background: #F8E8CC;
     padding: 20px;
     border-radius: 6px;
     min-width: 300px;
@@ -98,7 +98,9 @@ textarea {
     resize: none;
     width: 600px;
     height: 200px;
-    background-color: #EAE0C8;;
+    background-color: #F8E8CC;;
+    border: 1px solid #914E56;
+    border-radius: 6px;
 }
 
 label {
@@ -109,8 +111,10 @@ label {
 select {
     margin: 4px 0;
     padding: 6px;
-    background-color: #bbb1a3;
-    color: #414c56;
+    background-color: #F8E8CC;
+    color: #2f2a35;
+    border: 1px solid #914E56;
+    border-radius: 6px;
 }
 
 .action-button {
@@ -122,18 +126,18 @@ select {
 
 .edit-btn {
     background-color: #2563eb; /* синий */
-    color: white;
+    color: #2f2a35;
 }
 
 .delete-btn {
     background-color: #dc2626; /* красный */
-    color: white;
+    color: #2f2a35;
 }
 
 #analytics {
     font-size: 16px;
     padding: 10px 0;
-    border-top: 1px solid #e5e5e5;
+    border-top: 1px solid #914E56;
     margin-top: 10px;
 }
 
@@ -143,7 +147,7 @@ select {
     bottom: 20px;
     left: 50%;
     transform: translateX(-50%);
-    color: white;
+    color: #2f2a35;
     padding: 12px 20px;
     border-radius: 6px;
     font-weight: bold;
