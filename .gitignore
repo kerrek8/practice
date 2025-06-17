@@ -32,3 +32,5 @@ main
 database/
 
 !/.env
+.env
+*.env
