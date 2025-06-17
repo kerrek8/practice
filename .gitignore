@@ -22,13 +22,13 @@ tmp/
 .vscode
 .idea
 
-# .env file
-.env
+
 
 # Project build
 main
 *templ.go
 
 
-./database/database.db
+database/
 
+!/.env
