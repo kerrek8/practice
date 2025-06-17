@@ -15,7 +15,9 @@ FROM alpine:3.20.1 AS prod
 WORKDIR /app
 COPY --from=build /app/main /app/main
 COPY --from=build /app/migrator /app/migrator
-COPY --from=build /app/.env /app/.env
+ENV PORT=${PORT}
+ENV BLUEPRINT_DB_URL=${BLUEPRINT_DB_URL}
+ENV JWT_KEY=${JWT_KEY}
 RUN mkdir /app/database
 RUN touch /app/database/database.db
 COPY --from=build /app/migrations /app/migrations
